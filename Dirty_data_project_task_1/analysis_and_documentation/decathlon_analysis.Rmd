@@ -1,0 +1,74 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+library(here)
+library(tidyverse)
+```
+
+```{r}
+here::here()
+
+decathlon_clean <- read_csv(here("clean_data/decathlon_clean.csv"))
+```
+
+
+# 1 Who had the longest long jump seen in the data?
+
+```{r}
+decathlon_clean %>% 
+  select(name, long_jump) %>% 
+  filter(long_jump == max(long_jump))
+```
+
+# 2 What was the average 100m time in each competition?
+
+```{r}
+decathlon_clean %>% 
+  select(x100m, competition) %>% 
+  group_by(competition) %>% 
+  summarise(avg_time = mean(x100m)) 
+```
+
+# 3 Who had the highest total points across both competitions?
+
+```{r}
+decathlon_clean %>% 
+  group_by(name) %>% 
+  mutate(highest_total_points_across_competitions = sum(points)) %>% 
+  arrange(desc(highest_total_points_across_competitions)) %>% 
+  select(name, highest_total_points_across_competitions) %>% 
+  head(1)
+```
+
+# 4 What was the shot-put scores for the top three competitors in each competition?
+
+```{r}
+decathlon_clean %>% 
+  filter(competition == "Decastar") %>% 
+  arrange(desc(points)) %>% 
+  head(3) %>% 
+  select(name, shot_put, competition)
+
+decathlon_clean %>% 
+  filter(competition == "OlympicG") %>% 
+  arrange(desc(points)) %>% 
+  head(3) %>% 
+  select(name, shot_put, competition)
+```
+
+
+# 5 What was the average points for competitors who ran the 400m in less than 50 seconds vs. those than ran 400m in more than 50 seconds
+
+```{r}
+decathlon_clean %>% 
+  filter(x400m < 50) %>% 
+  summarise(avg_points_400m_in_less_then_50s = mean(points))
+
+decathlon_clean %>% 
+  filter(x400m > 50) %>% 
+  summarise(avg_points_400m_in_more_then_50s = mean(points))
+```
+
