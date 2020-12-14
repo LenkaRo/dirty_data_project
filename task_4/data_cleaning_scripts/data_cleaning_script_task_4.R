@@ -1,5 +1,5 @@
 # Dirty data project
-# Task 1 - Decathlon Data
+# Task 4 - Halloween Candy
 # This is an R script to clean the raw input data
 -------------------------------------------------
   
@@ -507,6 +507,8 @@ length(column_headings_2017_final_alphabetically_with_first_seven_columns_back) 
 column_headings_2015_final_alphabetically_with_first_seven_columns_back == column_headings_2016_final_alphabetically_with_first_seven_columns_back
 column_headings_2016_final_alphabetically_with_first_seven_columns_back == column_headings_2017_final_alphabetically_with_first_seven_columns_back
 
+
+
 # Joining the three tables together using bind by rows
 
 join_all <- bind_rows(
@@ -514,7 +516,7 @@ join_all <- bind_rows(
   bbc_2016_final_alphabetically_with_first_seven_columns_back,
   bbc_2017_final_alphabetically_with_first_seven_columns_back)
 
-# dropping columns that do not sound "candy" to me
+## dropping columns that do not sound "candy" to me
 
 join_all_candy <- join_all %>% 
   select(- abstained_from_m_ming,
@@ -529,8 +531,203 @@ join_all_candy <- join_all %>%
 glimpse(join_all_candy)
 dim(join_all_candy)
 
-View(join_all_candy)
 
-here::here()
 
-write_csv(join_all_candy, path = "clean_data/candy_clean.csv")
+
+# cleaning the data points
+
+## age
+## age is data class character, also contains other then number values, eg 30's, enough, very
+## I am going to change it to integer and drop age outliers 
+
+join_all_candy_age <- join_all_candy %>%
+  mutate(age, age = as.integer(age)) %>% 
+  mutate(
+    age = case_when(
+      age > 99 | age < 4 ~ "replace_with_NA",
+      TRUE ~ as.character(age)
+    )
+  ) %>% 
+  mutate(
+    age = na_if(age, "replace_with_NA")
+  ) %>% 
+  mutate(age, age = as.integer(age))
+
+### checking all the unique values, age range is now 4 to 99
+
+join_all_candy_age$age %>% 
+  unique() %>% 
+  sort()
+
+
+## country
+## checking all distinct values in column country - so many! Here I would recommend to the survey authors to use a "choose from" type of questionnaire..
+
+join_all_candy$country %>% 
+  unique()
+
+## renaming typos and gathering all the nonsense ones in value "others"
+
+join_all_candy_age_country <- join_all_candy_age %>% 
+  mutate(
+    country = recode(country,
+                     "usa" = "USA",
+                     "US" = "USA",
+                     "United States of America" = "USA",
+                     "uSA" = "USA",
+                     "united states" = "USA",
+                     "Canada`" = "Canada",
+                     "canada" = "Canada",
+                     "United States" = "USA",
+                     "us" = "USA",                                                                 
+                     "france" = "France",                                                              
+                     "USSA" = "USA",                                                                
+                     "U.S.A." = "USA",                                                              
+                     "A tropical island south of the equator" = "other",                            
+                     "england" = "UK",                                                             
+                     "uk" = "UK",                                                                  
+                     "United Kingdom" = "UK",                                                     
+                     "Neverland" = "other",    #!!!!!!!!!!!!!                                                      
+                     "USA!" = "USA",                                                                
+                     "this one" = "USA",
+                     "USA (I think but it's an election year so who can really tell)" = "USA",     
+                     "51.0" = "other",                                                                
+                     "Usa" = "USA",                                                                 
+                     "U.S." = "USA",                                                                
+                     "Us" = "USA",                                                                  
+                     "America" = "USA",                                                             
+                     "Units States" = "USA",                                                        
+                     "belgium" = "Belgium",                                                             
+                     "croatia"= "Croatia",                                                           
+                     "United states" = "USA",                                                    
+                     "England" = "UK",                                                            
+                     "USA USA USA" = "USA",                                                        
+                     "the best one - usa" = "USA",                                                 
+                     "USA! USA! USA!" = "USA",                                                     
+                     "47.0" = "other",                                                             
+                     "españa" = "Spain",
+                     "u.s." = "USA",                                                              
+                     "there isn't one for old men" = "other",   #!!!!!!!!!!!!!                                                       
+                     "one of the best ones" = "other",                                               
+                     "The Yoo Ess of Aaayyyyyy" = "USA",                                            
+                     "United Kindom" = "UK",                                                            
+                     "hungary" = "Hungary",                                                           
+                     "united states of america" = "USA",                                                            
+                     "Somewhere" = "other", 
+                     "54.0" = "other",                                                             
+                     "44.0" = "other",                                                             
+                     "god's country"= "USA",                                                         
+                     "USA!!!!!!" = "USA",
+                     "EUA" = "other",                                                                
+                     "USA! USA!" = "USA",
+                     "45.0" = "other",                                                               
+                     "sweden" = "Sweden",                                                              
+                     "United Sates" = "USA",                                                       
+                     "Sub-Canadian North America... 'Merica" = "USA",                              
+                     "The Netherlands" = "Netherlands",
+                     "Trumpistan" = "USA",     #!!!!!!!!!!!!!                                                         
+                     "U.s." = "USA",
+                     "Merica" = "USA",
+                     "germany" = "Germany",
+                     "See above" = "other",                                                          
+                     "UNited States" = "USA",                                                      
+                     "kenya" = "Kenya",                                                               
+                     "30.0" = "other",
+                     "The republic of Cascadia" = "Cascadia",                                           
+                     "United Stetes" = "USA",                                                      
+                     "america" = "USA",                                                            
+                     "Not the USA or Canada" = "other",                                              
+                     "USA USA USA USA" = "USA",                                                    
+                     "United  States of America" = "USA",                                          
+                     "netherlands" = "Netherlands",                                                         
+                     "Denial" = "other",                                                             
+                     "United State" = "USA",                                                       
+                     "United staes" = "USA",
+                     "u.s.a." = "USA",                                                            
+                     "USAUSAUSA"= "USA",                                                           
+                     "35" = "other",                                                                 
+                     "finland" = "Finland",                                                            
+                     "unhinged states"  = "USA",                                                   
+                     "US of A"        = "USA",                                                     
+                     "Unites States"   = "USA",                                                    
+                     "The United States"  = "USA",                                                 
+                     "North Carolina"    = "USA",                                                  
+                     "Unied States"  = "USA",                                                      
+                     "Europe" = "other",                                                             
+                     "Earth" = "other",                                                              
+                     "U S" = "USA",                                                                
+                     "U.K." = "UK",
+                     "The United States of America" = "USA",                                       
+                     "unite states"  = "USA",                                                      
+                     "46" = "other",                                                                 
+                     "cascadia" = "Cascadia",                                                            
+                     "insanity lately" = "other",                                                    
+                     "USA? Hard to tell anymore.."     = "USA",                                    
+                     "'merica"  = "USA",                                                           
+                     "usas"  = "USA",                                                              
+                     "Pittsburgh" = "USA",
+                     "45"  = "other",                                                                
+                     "32"  = "other",                                                                
+                     "australia" = "Australia",                                                          
+                     "A"  = "other",                                                                 
+                     "Can"  = "Canada",                                                               
+                     "Canae" = "Canada",                                                               
+                     "New York" = "USA",                                                           
+                     "California" = "USA",                                                         
+                     "USa"  = "USA",                                                               
+                     "South africa"  = "South Africa",                                                      
+                     "I pretend to be from Canada, but I am really from the United States." = "USA",  #!!!!!!!!!!!!! 
+                     "Uk" = "UK",                                                                 
+                     "United Stated" = "USA",                                                      
+                     "Ahem....Amerca" = "USA",                                                     
+                     "UD" = "other",                                                                  
+                     "New Jersey" = "USA",                                                         
+                     "CANADA"    = "Canada",                                                          
+                     "United ststes" = "USA",                                                      
+                     "United Statss"    = "USA",                                                   
+                     "endland"  = "UK",                                                       
+                     "Atlantis" = "other",                                                           
+                     "murrika"  = "USA",                                                           
+                     "USAA" = "USA",                                                                
+                     "Alaska" = "USA",
+                     "united States" = "USA",                                                      
+                     "soviet canuckistan" = "other",                                                 
+                     "N. America" = "USA",                                                         
+                     "hong kong"= "China",                                                           
+                     "spain" = "Spain",                                                              
+                     "Hong Kong" = "China",                                                          
+                     "Narnia" = "other",      #!!!!!!!!!!!!!                                                
+                     "u s a" = "USA",                                                              
+                     "United Statea" = "USA",                                                      
+                     "united ststes" = "USA",                                                      
+                     "1"  = "other",                                                                 
+                     "subscribe to dm4uz3 on youtube"  = "other",                                    
+                     "United kingdom"  = "UK",                                                    
+                     "USA USA USA!!!!" = "USA",                                                    
+                     "I don't know anymore"  = "other",                                              
+                     "Fear and Loathing" = "other",
+                     "Scotland" = "UK",
+                     "Korea" = "South Korea",
+                     "Murica" = "USA"
+                     )
+  )
+
+## all unique countries sorted alphabetically, we have now 36 countries and 1 other category represented in the data frame
+
+join_all_candy_age_country$country %>% 
+  unique() %>% 
+  sort()
+
+
+# clean_data data frame for analysis
+
+candy_clean <- join_all_candy_age_country  
+
+dim(candy_clean)
+glimpse(candy_clean)
+
+View(candy_clean)
+
+# saving the new clean_data as a csv file
+
+write_csv(candy_clean, path = "clean_data/candy_clean.csv")
