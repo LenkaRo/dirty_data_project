@@ -7,7 +7,7 @@ We have got results from all 10 disciplines for each competitor, depending on wh
 
 Some competitors attended both competitions.
 
-Data set does not contain any missing values but needed to be cleaned. 
+Data set does not contain any missing values but needed to be cleaned.
 
 * _data_cleaning_script.R_ - the data cleaning script to clean the raw data to get the data set ready for analysis (column heading unified to snake_case style, row names shifted to a column etc). It also contains description of the observations in the data.
  
