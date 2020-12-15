@@ -3,20 +3,164 @@ title: "R Notebook"
 output: html_notebook
 ---
 
+```{r}
+library(tidyverse)
+library(here)
+library(sqldf)
+
+
+here::here()
+
+candy_clean <- read_csv(here("clean_data/candy_clean.csv"), guess_max = 9349)
+
+glimpse(candy_clean) %>% head(10)
+```
+
+
 Analysis questions
 
 Q1 What is the total number of candy ratings given across the three years. (number of candy ratings, not number of raters. Don’t count missing values)
 
+```{r}
+#JOY, DESPAIR or MEH
+
+# function to pick up all missing values per each column
+
+nonNAs <- function(x) {
+  as.vector(apply(x, 2, function(x) length(which(!is.na(x)))))
+}
+
+# subsetting data frame that contains only candies (column 8 onward)
+
+candy_clean_sub_candies <- candy_clean %>% 
+  select(8:117)
+
+## sum of all missing values 
+
+missing_values_candies <- nonNAs(candy_clean_sub_candies )
+
+candy_na_total <- sum(missing_values_candies)
+
+## number of all data points 
+
+candy_ratings_total_incl_na <- nrow(candy_clean_sub_candies) * ncol(candy_clean_sub_candies)
+
+## total number of candy ratings given across the three years
+
+ratings_total = candy_ratings_total_incl_na - candy_na_total
+ratings_total
+```
+
+
 Q2 What was the average age of people who are going out trick or treating and the average age of people not going trick or treating?
+
+```{r}
+candy_clean %>% 
+  filter(going_out_trick_or_treating_yourself == "Yes" | going_out_trick_or_treating_yourself == "No") %>% 
+  group_by(going_out_trick_or_treating_yourself) %>% 
+  summarise(avg_age = mean(age, na.rm = TRUE))
+```
+
 
 Q3 For each of joy, despair and meh, which candy bar revived the most of these ratings?
 
+```{r}
+# subsetting only candies that contain "bar" in their name
+# note. n() gives the current group size
+# pivoting into two columns, one with candy bar names, the second one with rating
+# getting total of each rating type per each candy
+
+candy_bars <- candy_clean %>% 
+  select(contains("bar")) %>% 
+  pivot_longer(
+    cols = 1:8,
+    names_to = "candy_bars",
+    values_to = "rating"
+  ) %>% 
+  group_by(candy_bars, rating) %>% 
+  summarise(count = n())
+
+
+candy_bars %>% 
+  filter(rating == "JOY") %>% 
+  arrange(desc(count)) %>% 
+  head(1)
+
+candy_bars %>% 
+  filter(rating == "DESPAIR") %>% 
+  arrange(desc(count)) %>% 
+  head(1)
+
+candy_bars %>% 
+  filter(rating == "MEH") %>% 
+  arrange(desc(count)) %>% 
+  head(1)
+```
+
 Q4 How many people rated Starburst as despair?
+
+```{r}
+candy_clean %>% 
+  select(starburst) %>% 
+  filter(starburst == "DESPAIR") %>% 
+  summarise(total_starburst_despair = n())
+```
+
 
 # For the next three questions, count despair as -1, joy as +1 and meh as 0.
 
+```{r}
+# splitting data frame candy_clean into two data frames to be able to change rating to -1, 0, 1
+
+candy_clean_sub_id <- candy_clean %>% 
+  select(1:6)
+
+candy_clean_counting_sub <- candy_clean %>% 
+  select(7:ncol(candy_clean)) %>% 
+  mutate_all(
+    funs(case_when(
+      . == "JOY" ~ 1,
+      . == "DESPAIR" ~ -1,
+      . == "MEH" ~ 0,
+    ))) 
+
+# and binding them back together
+
+candy_clean_counting <- cbind(candy_clean_sub_id, candy_clean_counting_sub) 
+```
+
+
 Q5 What was the most popular candy bar by this rating system for each gender in the dataset?
+
+```{r}
+candy_clean_counting %>% 
+  select(gender, contains("bar")) %>% 
+  filter(!is.na(gender)) %>% 
+  group_by(gender) %>% 
+  summarise_all(~sum(., na.rm = TRUE))
+
+
+    
+```
+
 
 Q6 What was the most popular candy bar in each year?
 
+```{r}
+candy_clean_counting %>% 
+  select(year, contains("bar")) %>% 
+  group_by(year) %>% 
+  summarise_all(~sum(., na.rm = TRUE))
+
+
+
+
+```
+
+
 Q7 What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+
+```{r}
+
+```
+

@@ -26,17 +26,6 @@ bbc_2017 <- read_excel("raw_data/boing-boing-candy-2017.xlsx") %>% clean_names()
 
 # Cleaning the data
 
-## Survey 2015
-
-dim(bbc_2015)
-tail(bbc_2015)
-names(bbc_2015)
-
-## checking for missing values
-
-bbc_2015 %>% 
-  summarise(across(.fns = ~ sum(is.na(.x))))
-
 ## combining the three data sets together
 
 ### they have all different amount of rows and columns, 
@@ -47,7 +36,7 @@ bbc_2015 %>%
 
 ## 2015 
 
-### creating vectors on NAs
+### creating vectors of NAs
 ### adding these to match the table column structure and data type across the all three tables 
 ### id, gender, country and state_province is missing in 2015 data frame
 
@@ -76,6 +65,8 @@ bbc_2015_id <- bbc_2015_id %>%
 
 bbc_2015_id_alphabetically <- bbc_2015_id[,order(colnames(bbc_2015_id))]
 
+### bringing id, timestamp, ... going_out_trick_or_treating_yourself back to the front of data frame
+
 bbc_2015_ordered <- bbc_2015_id_alphabetically %>% 
   relocate(id, .before = 1) %>% 
   relocate(timestamp, .after = 1) %>% 
@@ -86,6 +77,7 @@ bbc_2015_ordered <- bbc_2015_id_alphabetically %>%
   relocate(going_out_trick_or_treating_yourself, .after = 6)
 
 names(bbc_2015_ordered)
+
 
 
 ## 2016 
@@ -125,7 +117,8 @@ bbc_2016_ordered <- bbc_2016_id_alphabetically %>%
   relocate(going_out_trick_or_treating_yourself, .after = 6)
 
 names(bbc_2016_ordered)
-  
+
+
 
 ## 2017
 
@@ -133,7 +126,7 @@ names(bbc_2016_ordered)
 ### adding these to match the table column structure and data type across the all three tables
 ### timestamp is missing in 2017 data frame
 
-timestamp_vector_2017 <- rep(NA, 2460) %>% as.Date() #################
+timestamp_vector_2017 <- rep(NA, 2460) %>% as.Date()
 
 bbc_2017_id <- bbc_2017 %>% 
   add_column(timestamp_vector_2017, .after = 1)
@@ -155,6 +148,8 @@ bbc_2017_id <- bbc_2017_id %>%
 
 bbc_2017_id_alphabetically <- bbc_2017_id[,order(colnames(bbc_2017_id))]
 
+### shuffling the columns to match the structure of 2015 data frame
+
 bbc_2017_ordered <- bbc_2017_id_alphabetically %>% 
   relocate(id, .before = 1) %>% 
   relocate(timestamp, .after = 1) %>% 
@@ -165,7 +160,7 @@ bbc_2017_ordered <- bbc_2017_id_alphabetically %>%
   relocate(going_out_trick_or_treating_yourself, .after = 6)
 
 
-## column 8 and onward - candies
+## column 8 and onward are candies
 
 ### creating vectors from column headings
 
@@ -189,10 +184,10 @@ candies <- tibble(column_headings_2015,
                   column_headings_2016_right_length,
                   column_headings_2017_right_length)
 
-### there were apparently questions in the survey not related to candy types, I am gonna drop those columns not containing string "JOY" 
+### there were apparently questions in the survey not related to candy types, I am gonna drop those columns not containing string "JOY"
 ### (considering the amount of respondents, this condition should pick up all candy types, there should always be at least one respondent liking a particular candy)
-### in this step, I am only considering at position 8 an onward
-### id, timestamp, ... going_out_trick_or_treating_yourself remain untatched
+### in this step, I am only considering candy columns (position 8 onward)
+### id, timestamp, ... going_out_trick_or_treating_yourself remain untouched
 
 #### 2015
 
@@ -216,28 +211,29 @@ bbc_2017_ordered_subset <- bbc_2017_ordered %>%
 bbc_2017_ordered_subset_candies_only <- bbc_2017_ordered_subset[, apply(bbc_2017_ordered_subset, 2, `%in%`, x = "JOY")]
 
 
+
 ### "glueing" the data frames back together with first 8 columns
 
 #### 2015
 
-bbc_2015_sub_first_eight_columns <- bbc_2015_ordered %>% 
+bbc_2015_sub_first_seven_columns <- bbc_2015_ordered %>% 
   select(1:7)
 
-bbc_2015_candies <- cbind(bbc_2015_sub_first_eight_columns, bbc_2015_ordered_subset_candies_only)
+bbc_2015_candies <- cbind(bbc_2015_sub_first_seven_columns, bbc_2015_ordered_subset_candies_only)
 
 #### 2016
 
-bbc_2016_sub_first_eight_columns <- bbc_2016_ordered %>% 
+bbc_2016_sub_first_seven_columns <- bbc_2016_ordered %>% 
   select(1:7)
 
-bbc_2016_candies <- cbind(bbc_2016_sub_first_eight_columns, bbc_2016_ordered_subset_candies_only)
+bbc_2016_candies <- cbind(bbc_2016_sub_first_seven_columns, bbc_2016_ordered_subset_candies_only)
 
 #### 2017
 
-bbc_2017_sub_first_eight_columns <- bbc_2017_ordered %>% 
+bbc_2017_sub_first_seven_columns <- bbc_2017_ordered %>% 
   select(1:7)
 
-bbc_2017_candies <- cbind(bbc_2017_sub_first_eight_columns, bbc_2017_ordered_subset_candies_only)
+bbc_2017_candies <- cbind(bbc_2017_sub_first_seven_columns, bbc_2017_ordered_subset_candies_only)
 
 
 ### creating vectors from column headings
@@ -265,14 +261,15 @@ candies_only <- tibble(column_headings_2015_candies_only_right_length,
                        
 dim(candies_only) # 110 x 3
 
-#### there is 112 types of candies across the three data sets
-#### when particular type of candy is missing, I create it and fill it with NAs
-#### for reference, that is why I created tibble candies_only - the differences in heading names across the three years are well visible there
-#### there is little tweaks in candy naming across the years so adjusting these to 
-#### (eg. bonkers in 2015 renamed to bonkers_the_candy to match naming in 2016 and 2017,
-#### typo in boxo_raisins, changed to box_o_raisins in 2016 and 2017,
-#### hershey_s_kissables in 2015 renamed to hersheys_kisses
-#### renamed sweetums to sweetums_a_friend_to_diabetes in 2015 data set to match 2016 and 2017
+
+#### as of now, there is allegedly 112 types of candies across the three data sets
+#### when a particular type of candy is missing in one of the three tables, I create it and fill it with NAs
+#### I created tibble candies_only to visually see the differences in the heading names across the three years
+#### there is few little differences in candy naming across the years so adjusting these too 
+#### (eg. "bonkers" in 2015 renamed to "bonkers_the_candy" to match naming in 2016 and 2017,
+#### typo in "boxo_raisins", changed to "box_o_raisins" in 2016 and 2017,
+#### "hershey_s_kissables" in 2015 renamed to "hersheys_kisses",
+#### "sweetums" renames to "sweetums_a_friend_to_diabetes" 
 
 
 abstained_from_m_ming_vector_2015 <- rep(NA, 5630) %>% as.character()
@@ -451,7 +448,7 @@ bbc_2017_final <- bbc_2017_candies %>%
   add_column(third_party_m_ms_vector_2017, .after = "take_5") %>% rename(third_party_m_ms = third_party_m_ms_vector_2017) 
   
 
-##### due to sorting the column heading names alphabetically first and in the step above then finding some typos in column heading names
+##### due to sorting the column heading names alphabetically first and then, in the step above, finding and fixing typos in column heading names
 ##### I am now going to order alphabetically all three data frame again to get exactly the same column heading names across them
 
 ###### ordering column heading names alphabetically 
@@ -472,6 +469,7 @@ bbc_2015_final_alphabetically_with_first_seven_columns_back <- bbc_2015_final_al
   relocate(state_province, .after = 5) %>% 
   relocate(going_out_trick_or_treating_yourself, .after = 6)
 
+
 bbc_2016_final_alphabetically_with_first_seven_columns_back <- bbc_2016_final_alphabetically %>% 
   relocate(id, .before = 1) %>% 
   relocate(timestamp, .after = 1) %>% 
@@ -481,6 +479,7 @@ bbc_2016_final_alphabetically_with_first_seven_columns_back <- bbc_2016_final_al
   relocate(state_province, .after = 5) %>% 
   relocate(going_out_trick_or_treating_yourself, .after = 6)
 
+
 bbc_2017_final_alphabetically_with_first_seven_columns_back <- bbc_2017_final_alphabetically %>% 
   relocate(id, .before = 1) %>% 
   relocate(timestamp, .after = 1) %>% 
@@ -489,6 +488,8 @@ bbc_2017_final_alphabetically_with_first_seven_columns_back <- bbc_2017_final_al
   relocate(country, .after = 4) %>% 
   relocate(state_province, .after = 5) %>% 
   relocate(going_out_trick_or_treating_yourself, .after = 6)
+
+
 
 ### creating vectors from column headings
 
@@ -516,6 +517,7 @@ join_all <- bind_rows(
   bbc_2016_final_alphabetically_with_first_seven_columns_back,
   bbc_2017_final_alphabetically_with_first_seven_columns_back)
 
+
 ## dropping columns that do not sound "candy" to me
 
 join_all_candy <- join_all %>% 
@@ -528,7 +530,6 @@ join_all_candy <- join_all %>%
          - real_housewives_of_orange_county_season_9_blue_ray,
          - vicodin)
 
-glimpse(join_all_candy)
 dim(join_all_candy)
 
 
@@ -537,8 +538,9 @@ dim(join_all_candy)
 # cleaning the data points
 
 ## age
-## age is data class character, also contains other then number values, eg 30's, enough, very
-## I am going to change it to integer and drop age outliers 
+
+### age is data class character, also contains other then number values, eg 30's, enough, very
+### I am going to change it to integer and drop age outliers 
 
 join_all_candy_age <- join_all_candy %>%
   mutate(age, age = as.integer(age)) %>% 
@@ -553,6 +555,7 @@ join_all_candy_age <- join_all_candy %>%
   ) %>% 
   mutate(age, age = as.integer(age))
 
+
 ### checking all the unique values, age range is now 4 to 99
 
 join_all_candy_age$age %>% 
@@ -561,12 +564,13 @@ join_all_candy_age$age %>%
 
 
 ## country
-## checking all distinct values in column country - so many! Here I would recommend to the survey authors to use a "choose from" type of questionnaire..
+
+### checking all distinct values in column country - so many! Here I would recommend to the survey authors to use a "choose from" type of questionnaire..
 
 join_all_candy$country %>% 
   unique()
 
-## renaming typos and gathering all the nonsense ones in value "others"
+### renaming typos and gathering all the nonsense ones in value "others"
 
 join_all_candy_age_country <- join_all_candy_age %>% 
   mutate(
@@ -712,22 +716,40 @@ join_all_candy_age_country <- join_all_candy_age %>%
                      )
   )
 
-## all unique countries sorted alphabetically, we have now 36 countries and 1 other category represented in the data frame
+### all unique countries sorted alphabetically, we have now 36 countries and 1 other category represented in the data frame
 
 join_all_candy_age_country$country %>% 
   unique() %>% 
   sort()
 
 
-# clean_data data frame for analysis
+# HURRAY! clean_data data frame for analysis
 
-candy_clean <- join_all_candy_age_country  
+## last tweaks - getting rid of timestamp column and filling id column with reasonable id numbers
+
+id_vector <- 1:nrow(join_all_candy_age_country)
+year_vector <- c(rep(2015, times = nrow(bbc_2015)), rep(2016, times = nrow(bbc_2016)), rep(2017, times = nrow(bbc_2017)))
+
+
+candy_clean <- join_all_candy_age_country %>% 
+  mutate(id = id_vector) %>% 
+  mutate(timestamp = year_vector) %>% rename(year = timestamp)
 
 dim(candy_clean)
 glimpse(candy_clean)
 
 View(candy_clean)
 
-# saving the new clean_data as a csv file
+## double-checking there isn't any column of just missing values - OK! 
+
+nonNAs <- function(x) {
+  as.vector(apply(x, 2, function(x) length(which(!is.na(x)))))
+}
+
+missing_values_candies <- nonNAs(candy_clean)
+missing_values_candies
+
+
+# saving the new clean_data data frame as a csv file
 
 write_csv(candy_clean, path = "clean_data/candy_clean.csv")
