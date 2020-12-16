@@ -32,23 +32,21 @@ nonNAs <- function(x) {
 
 # subsetting data frame that contains only candies (column 8 onward)
 
-candy_clean_sub_candies <- candy_clean %>% 
-  select(8:117)
+candies <- candy_clean %>% 
+  select(7:117)
 
 ## sum of all missing values 
 
-missing_values_candies <- nonNAs(candy_clean_sub_candies )
-
-candy_na_total <- sum(missing_values_candies)
-
+total_NA_candies <- sum(nonNAs(candies))
+  
 ## number of all data points 
 
-candy_ratings_total_incl_na <- nrow(candy_clean_sub_candies) * ncol(candy_clean_sub_candies)
+total_candy_ratings_incl_NA <- nrow(candies) * ncol(candies)
 
 ## total number of candy ratings given across the three years
 
-ratings_total = candy_ratings_total_incl_na - candy_na_total
-ratings_total
+total_ratings = total_candy_ratings_incl_NA - total_NA_candies
+total_ratings
 ```
 
 
