@@ -3,12 +3,12 @@
 # This is an R script to clean the raw input data
 -------------------------------------------------
   
-  # 1 Reading in the raw data
+# 1 Reading in the raw data
   
-  ## installing packages in the terminal: e.g. install.packages("here")
-  ## uploading the libraries
+## installing packages in the terminal: e.g. install.packages("here")
+## uploading the libraries
   
-  library(here)
+library(here)
 library(readr)
 library(readxl)
 library(janitor)
@@ -18,33 +18,32 @@ library(tidyverse)
 
 here::here()
 
-## Reading in the data, changing the column header names to snake_case style
+## Reading in the data, changing the column heading to snake_case style
 
 bbc_2015 <- read_excel("raw_data/boing-boing-candy-2015.xlsx") %>% clean_names()
 bbc_2016 <- read_excel("raw_data/boing-boing-candy-2016.xlsx") %>% clean_names()
 bbc_2017 <- read_excel("raw_data/boing-boing-candy-2017.xlsx") %>% clean_names()
 
-# Cleaning the data
 
-## combining the three data sets together
+# 2 Cleaning the data
 
-### they have all different amount of rows and columns
+## combining the three data frames together (they have all different amount of rows and columns)
 
-## column names
+## to see the differences in naming across the three data frames, I create a table using column heading names from each data frame 
 
-length(bbc_2015)
-length(bbc_2016)
-length(bbc_2017)
-
-# renaming candy heading names to match across the three data frames
-
-## to see the differences in naming:
+length(bbc_2015) # 124
+length(bbc_2016) # 123 <--- to create a table, need to match the length of the longest (124)
+length(bbc_2017) # 120 <---
 
 column_names <- tibble(names(bbc_2015),
                        c(names(bbc_2016), NA),
                        c(names(bbc_2017), NA, NA, NA, NA))
 
+
 ## creating vector 'year' so the observations can be identified by the year they came from 
+## renaming candy heading names to match across the three data frames
+
+### 2015
 
 year_vector <- c(rep(2015, times = nrow(bbc_2015)))
 
@@ -59,6 +58,7 @@ bbc_2015 <- bbc_2015 %>%
          "100_grand_bar" = x100_grand_bar) %>% 
   mutate(timestamp = year_vector) %>% rename(year = timestamp)
 
+### 2016
 
 year_vector <- c(rep(2016, times = nrow(bbc_2016)))
 
@@ -73,8 +73,9 @@ bbc_2016 <- bbc_2016 %>%
          "100_grand_bar" = x100_grand_bar) %>%  
   mutate(timestamp = year_vector) %>% rename(year = timestamp)
 
+### 2017
 
-# getting rid of 'q1_', 'q2_', ... prefix in column headings
+#### getting rid of 'q1_', 'q2_', ... prefix in column headings
 
 colnames(bbc_2017) <- gsub(pattern = "q[0-9]*_", '', colnames(bbc_2017))
 year_vector <- c(rep(2017, times = nrow(bbc_2017)))
@@ -106,7 +107,7 @@ candies <-  join_all %>%
 
 # removing columns that do not sound candy to me
 
-candies[!candies %in% c("abstained_from_m_ming", 
+candies <- candies[!candies %in% c("abstained_from_m_ming", 
                         "bonkers_the_board_game", 
                         "cash_or_other_forms_of_legal_tender", 
                         "chardonnay", 
@@ -131,7 +132,7 @@ join_all <- join_all %>%
 
 ## age
 
-### age is data class character, also contains other then number values, eg 30's, enough, very etc.
+### age is data class character, also contains other then number values, e. g.  30's, enough, very etc.
 ### I am going to change it to integer and drop age outliers 
 
 join_all <- join_all %>%
@@ -315,8 +316,8 @@ join_all <- join_all %>%
 #   sort()
 
 
-# HURRAY! clean_data data frame for analysis
-# just bringing the non candy columns forward and sorting the candies alphabeticaly 
+# HURRAY! clean_data data frame nearly ready for analysis
+# just bringing the non candy columns forward and sorting the candies alphabetically 
 
 candy_clean <- join_all[,order(colnames(join_all))] %>% 
   relocate(year, .before = 1) %>% 
@@ -328,14 +329,19 @@ candy_clean <- join_all[,order(colnames(join_all))] %>%
 
 View(candy_clean)
 
-## double-checking there isn't any column of just missing values - OK! 
-
-# nonNAs <- function(x) {
-#   as.vector(apply(x, 2, function(x) length(which(!is.na(x)))))
-#   }
-
-# nonNAs(candy_clean)
-
 # saving the new clean_data data frame as a csv file
 
 write_csv(candy_clean, path = "clean_data/candy_clean.csv")
+
+
+#### note, to have the data frame perfectly clean, I should also gather all the candy types in just one column
+#### this step would look like this, but for the analysis purpose, I want to keep both
+
+# pivoting the data longer to have the data tidy for some of the analysis 
+
+# candy_clean_longer <- candy_clean %>% 
+#   pivot_longer(
+#     cols = ("100_grand_bar":"york_peppermint_patties"),
+#     names_to = "candy",
+#     values_to = "rating"
+#  )
