@@ -1,19 +1,53 @@
 ---
-title: "R Notebook"
+title: "Dirty data project - Halloween Candy"
 output: html_notebook
 ---
+
+# Dirty data project 
+## Task 4 - Halloween Candy
+
+We are dealing with data obtained from three independent surveys.
+
+These surveys were carried on in years 2015, 2016 and 2017.
+
+Respondents from all over the world were ask to rank various candies based on their subjective opinion.
+
+They were offered three options as an answer - *joy*, *despair*, or *meh*
+
+There were also additional questions like what was the respondents' age, what was their country of origin, whether they prefer name Betty or Veronica etc. These questions had no default set of answers and it was up to the respondents to type in whatever they found appropriate.
+
+Some candy types, as well as additional questions, did only appear in one or two surveys.
+
+As a result, the raw data entering the analysis differed significantly and required some deep cleaning first.
+
+More information on the data can be found 
+[here](https://www.scq.ubc.ca/so-much-candy-data-seriously/).
+
+### The project structure:
+
+#### Data cleaning
+
+* *data\_cleaning\_script\_task\_4.R* - combining the three data frames together and saving the cleaned data into a *candy\_clean.csv* file
+ 
+#### Data analysis
+
+* _candy\_analysis.Rmd_ - reading in the *candy\_clean.csv* file and carrying out an analysis
+
+Both files are thoroughly commented on what steps have been taken.
+
 
 ```{r}
 library(tidyverse)
 library(here)
 library(sqldf)
+```
 
-
+```{r}
 here::here()
 
 candy_clean <- read_csv(here("clean_data/candy_clean.csv"), guess_max = 9349)
 
-# pivoting the data longer to have the data tidy for some of the analysis 
+# pivoting the data into longer format to have the data in "tidier" format for some of the analysis 
 
 candy_clean_longer <- candy_clean %>% 
   pivot_longer(
@@ -24,9 +58,9 @@ candy_clean_longer <- candy_clean %>%
 ```
 
 
-Analysis questions
+## Analysis questions
 
-Q1 What is the total number of candy rating given across the three years. (number of candy rating, not number of raters. Don’t count missing values)
+### Q1 What is the total number of candy rating given across the three years. (number of candy rating, not number of raters. Don’t count missing values)
 
 ```{r}
 ## 1. longer table
@@ -55,7 +89,7 @@ sum(nonNAs(candies))
 ```
 
 
-Q2 What was the average age of people who are going out trick or treating and the average age of people not going trick or treating?
+### Q2 What was the average age of people who are going out trick or treating and the average age of people not going trick or treating?
 
 ```{r}
 ## 1. longer table
@@ -75,9 +109,11 @@ candy_clean %>%
 ```
 
 
-Q3 For each of joy, despair and meh, which candy bar revived the most of these ratings?
+### Q3 For each of joy, despair and meh, which candy bar revived the most of these ratings?
 
 ```{r}
+# subsetting only candies that contain "bar" in their name
+
 ## 1. longer table
 
 candy_clean_longer %>% 
@@ -88,13 +124,10 @@ candy_clean_longer %>%
   summarise(count = n()) %>% 
   filter(count == max(count))
   
-
 ## 2. wider table
 
-# subsetting only candies that contain "bar" in their name
-# note. n() gives the current group size
-# pivoting into two columns, one with candy bar names, the second one with rating
-# getting total of each rating type per each candy
+### pivoting into two columns, one with candy bar names, the second one with rating
+### getting total of each rating type per each candy
 
 candy_clean %>% 
   select(contains("bar")) %>% 
@@ -108,10 +141,10 @@ candy_clean %>%
   summarise(count = n()) %>% 
   filter(count == max(count))
 
-# note can use function groups() to track what groups came through to a particular point
+#### note.include function groups() to track what groups came through to a particular point (handy especially after group_by step)
 ```
 
-Q4 How many people rated Starburst as despair?
+### Q4 How many people rated Starburst as despair?
 
 ```{r}
 ## 1. longer table
@@ -131,7 +164,7 @@ candy_clean %>%
 ```
 
 
-# For the next three questions, count despair as -1, joy as +1 and meh as 0.
+### For the next three questions, count despair as -1, joy as +1 and meh as 0.
 
 ```{r}
 ## 1. longer table
@@ -143,7 +176,6 @@ candy_clean_counting_longer <- candy_clean_longer %>%
       rating == "MEH" ~ 0,
     )
   )
-
 
 ## 2. wider table
 
@@ -167,7 +199,7 @@ candy_clean_counting_wider <- cbind(candy_clean_sub_id, candy_clean_counting_sub
 ```
 
 
-Q5 What was the most popular candy bar by this rating system for each gender in the dataset?
+### Q5 What was the most popular candy bar by this rating system for each gender in the dataset?
 
 ```{r}
 candy_clean_counting_longer %>% 
@@ -180,8 +212,7 @@ candy_clean_counting_longer %>%
   slice_max(avg_rating) # slice_max respects group_by
 ```
 
-
-Q6 What was the most popular candy bar in each year?
+### Q6 What was the most popular candy bar in each year?
 
 ```{r}
 candy_clean_counting_longer %>% 
@@ -193,8 +224,7 @@ candy_clean_counting_longer %>%
   slice_max(avg_rating)
 ```
 
-
-Q7 What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
+### Q7 What was the most popular candy bar by this rating for people in US, Canada, UK and all other countries?
 
 ```{r}
 candy_clean_counting_longer %>% 
@@ -214,5 +244,18 @@ candy_clean_counting_longer %>%
   group_by(country_group, candy) %>% 
   summarise(avg_rating = mean(rating, na.rm = TRUE)) %>% 
   slice_max(avg_rating) 
+```
+
+### Candy Hierarchy - all the candies sorted from the most popular to the least popular
+
+#### an overall Halloween Candy winner accross the three years was any_full_sized_candy_bar, while a broken_glow_stick took the last place :)
+
+```{r}
+candy_clean_counting_longer %>% 
+  select(candy, rating) %>% 
+  filter(!is.na(rating)) %>% 
+  group_by(candy) %>% 
+  summarise(avg_rating = mean(rating, na.rm = TRUE)) %>% 
+  arrange(desc(avg_rating))
 ```
 
