@@ -22,8 +22,6 @@ here::here()
 
 decathlon_raw_data <- read_rds(here("raw_data/decathlon.rds")) %>% clean_names()
 
-View(decathlon_raw_data)
-
 
 # 2 Cleaning the data
 
@@ -41,16 +39,10 @@ glimpse(decathlon_raw_data)
   # We see results from two decathlon competitions - Decastar and Olympic Games
   # Some of the participants competed in both competitions
 
-  # Changing the names to first letter upper case (eq. 'Abcdef..')
-
-firstup <- function(x) {
-  substr(x, 1, 1) <- toupper(substr(x, 1, 1))
-  x
-}
+  # Converting the first letter of competitor name to Uppercase and the rest of the letters to lower case (eq. 'Abcdef..')
 
 decathlon_clean <- decathlon_raw_data %>% 
-  mutate(name, name = tolower(name)) %>% 
-  mutate(name, name = firstup(name))
+  mutate(name = str_to_title(name)) 
 
 View(decathlon_clean)
 
