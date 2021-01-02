@@ -135,18 +135,12 @@ join_all <- join_all %>%
 ### age is data class character, also contains other then number values, e. g.  30's, enough, very etc.
 ### I am going to change it to integer and drop age outliers 
 
-join_all <- join_all %>%
-  mutate(age, age = as.integer(age)) %>% 
+join_all <- join_all %>% 
   mutate(
-    age = case_when(
-      age > 99 | age < 4 ~ "replace_with_NA",
-      TRUE ~ as.character(age)
-    )
-  ) %>% 
+    age = str_extract(age, "\\d+") %>% as.numeric(age)) %>% 
   mutate(
-    age = na_if(age, "replace_with_NA")
-  ) %>% 
-  mutate(age, age = as.integer(age))
+    age = if_else(age < 4, NA_real_, age),
+    age = if_else(age > 99, NA_real_, age))
 
 ### checking all the unique values, age range is now 4 to 99
 
