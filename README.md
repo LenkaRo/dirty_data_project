@@ -1,5 +1,5 @@
 # dirty_data_project
-CodeClan's dirty data project involving cleaning and tidying (very) messy data. Includes analysis insight report
+CodeClan's dirty data project involving cleaning and tidying (very) messy data.
 
 ## Task 4 - Halloween Candy
 
@@ -24,10 +24,10 @@ More information on the data can be found
 
 #### Data cleaning
 
-* *data\_cleaning\_script\_task\_4.R* - combining the three data frames together and saving the cleaned data into a *candy\_clean.csv* file
+* *[data\_cleaning\_script\_task\_4.R](https://github.com/LenkaRo/dirty_data_project/blob/master/task_4/data_cleaning_scripts/data_cleaning_script_task_4.R)* - combining the three data frames together and saving the cleaned data into a *candy\_clean.csv* file
  
 #### Data analysis
 
-* _candy\_analysis.Rmd_ - reading in the *candy\_clean.csv* file and carrying out an analysis
+* *[candy\_analysis.Rmd](https://github.com/LenkaRo/dirty_data_project/blob/master/task_4/analysis_and_documentation/candy_analysis.Rmd)* - reading in the *candy\_clean.csv* file and carrying out an analysis
 
 Both files are thoroughly commented on what steps have been taken.
